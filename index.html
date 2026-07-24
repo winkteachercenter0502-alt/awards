@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>캐츠잉글리시 · 상장 제작 웹 툴</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{ --ink:#4a3b2a; }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family:'Gowun Dodum', sans-serif;
+    background: linear-gradient(160deg,#FFF9E9 0%, #EAFBF3 55%, #F3F0FF 100%);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .app{
+    display:flex; gap:24px; max-width:1280px; margin:0 auto;
+    padding:28px 20px 60px; align-items:flex-start;
+  }
+  @media (max-width: 900px){ .app{ flex-direction:column; } }
+
+  .sidebar{
+    flex:0 0 360px; background:#fff; border-radius:20px;
+    box-shadow:0 10px 30px rgba(60,40,10,0.08); padding:22px 22px 26px;
+  }
+  .brand{ font-family:'Jua', sans-serif; font-size:21px; margin:0 0 4px; color:#2E7D5B; }
+  .brand small{ display:block; font-family:'Gowun Dodum',sans-serif; font-size:12.5px; color:#9a8b6f; margin-top:2px; }
+
+  .group-title{ font-size:13px; font-weight:700; color:#8a7a5c; margin:16px 0 8px; display:flex; align-items:center; gap:6px; }
+  .group-title::before{ content:"🐾"; }
+  .award-grid{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  .award-card{
+    border:2px solid transparent; border-radius:13px; padding:9px 10px 8px;
+    cursor:pointer; text-align:left; background:#faf8f2;
+    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  }
+  .award-card:hover{ transform:translateY(-2px); box-shadow:0 6px 14px rgba(0,0,0,0.08); }
+  .award-card.active{ border-color:var(--ac,#2CA57F); background:var(--acbg,#E3FBF3); box-shadow:0 6px 14px rgba(0,0,0,0.08); }
+  .award-card .swatch{ width:20px; height:20px; border-radius:50%; margin-bottom:6px; background:var(--ac,#2CA57F); box-shadow:inset 0 0 0 2px rgba(255,255,255,.6); }
+  .award-card .name{ font-weight:700; font-size:13px; line-height:1.3; }
+  .award-card .sub{ font-size:10.5px; color:#8a7a5c; margin-top:2px; line-height:1.3; }
+  .award-card .tag{ display:inline-block; margin-top:5px; font-size:9.5px; padding:1px 7px; border-radius:999px; background:#eee; color:#888; }
+  .award-card .tag.ok{ background:#e4f7ec; color:#2E7D5B; }
+  .award-card .tag.na{ background:#fdeee4; color:#c5551b; }
+
+  .field{ margin-top:15px; }
+  .field label{ display:block; font-size:12px; font-weight:700; color:#7a6b4d; margin-bottom:5px; }
+  .field input{
+    width:100%; padding:9px 11px; border-radius:10px; border:1.5px solid #eadfc4;
+    background:#fffdf7; font-family:'Gowun Dodum',sans-serif; font-size:14px; color:var(--ink);
+  }
+  .field input:focus{ outline:none; border-color:#2CA57F; }
+
+  .actions{ display:flex; gap:8px; margin-top:18px; }
+  .actions button{
+    flex:1; padding:10px 6px; border:none; border-radius:12px;
+    font-family:'Gowun Dodum',sans-serif; font-weight:700; font-size:13px; cursor:pointer;
+  }
+  .actions button:hover{ opacity:.85; }
+  #pngBtn{ background:#2E7D5B; color:#fff; }
+  #pdfBtn{ background:#374785; color:#fff; }
+
+  .note{ margin-top:14px; font-size:11px; color:#a99a7c; line-height:1.55; background:#fbf7ec; border-radius:10px; padding:9px 11px; }
+  .note b{ color:#8a6b3a; }
+
+  .preview-wrap{ flex:1; display:flex; flex-direction:column; align-items:center; }
+  .preview-hint{ font-size:13px; color:#8a7a5c; margin-bottom:14px; text-align:center; }
+  .canvas-shell{
+    border-radius:22px; overflow:hidden; box-shadow:0 18px 40px rgba(40,30,10,0.18);
+    line-height:0; background:#fff;
+  }
+  #certCanvas{ display:block; width:460px; max-width:80vw; height:auto; }
+  .status{ margin-top:12px; font-size:12px; color:#9a8b6f; }
+
+  .script-preview{
+    margin-top:18px; width:460px; max-width:80vw; background:#fff;
+    border-radius:16px; padding:14px 16px; box-shadow:0 8px 20px rgba(60,40,10,0.06);
+    font-size:12.5px; line-height:1.6; color:#6a5a3f;
+  }
+  .script-preview .lbl{ font-weight:700; color:#8a6b3a; font-size:11.5px; margin-bottom:3px; }
+  .script-preview .whisper{ margin-top:8px; font-style:italic; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <h1 class="brand">🐾 캐츠잉글리시<small>상장 제작 웹 툴 (이미지 합성 · PDF 다운로드)</small></h1>
+
+    <div class="group-title">재가입 3개월 전</div>
+    <div class="award-grid" id="group-before"></div>
+
+    <div class="group-title">재가입 후</div>
+    <div class="award-grid" id="group-after"></div>
+
+    <div class="group-title">해지 대비 회원</div>
+    <div class="award-grid" id="group-retention"></div>
+
+    <div class="field">
+      <label for="childName">아이 이름</label>
+      <input id="childName" type="text" placeholder="예: 민준">
+    </div>
+
+    <div class="actions">
+      <button id="pngBtn">🖼️ 이미지 저장</button>
+      <button id="pdfBtn">📄 PDF 저장</button>
+    </div>
+
+    <div class="note" id="imgStatus">템플릿 이미지를 불러오는 중...</div>
+  </aside>
+
+  <main class="preview-wrap">
+    <div class="preview-hint">상장을 선택하고 이름을 입력하면 '수여 대상 :' 옆 빈칸에 바로 이름이 채워집니다.</div>
+    <div class="canvas-shell">
+      <canvas id="certCanvas" width="718" height="1024"></canvas>
+    </div>
+    <div class="status" id="renderStatus"></div>
+
+    <div class="script-preview">
+      <div class="lbl">📋 상장 문구 (참고용 · 이미지에 이미 포함되어 있음)</div>
+      <div id="scriptBody"></div>
+      <div class="whisper" id="scriptWhisper"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+/* =============================================================================
+   1) 상장 데이터 구조 (교사가 쉽게 추가/수정하는 부분)
+   -----------------------------------------------------------------------------
+   id        : templates/ 폴더 안 이미지 파일명(확장자 제외)과 매칭되는 고유 키
+   category  : "before"(재가입 3개월 전) | "after"(재가입 후) | "retention"(해지 대비 회원)
+   name      : 상장 이름
+   sub       : 부제 (사이드바 카드에 작게 표시)
+   accent    : 사이드바 카드 포인트 색상
+   body/whisper : 상장 문구 (참고용 표시 · 실제 이미지에 이미 인쇄되어 있어 캔버스에는 안 그림)
+   nameSpot  : "수여 대상 :" 옆 빈칸 위치. xPct/yPct는 이미지 크기 대비 %, align은 텍스트 정렬,
+               color는 그 템플릿의 배경과 대비되는 글자색
+   ============================================================================= */
+const AWARD_TEMPLATES = [
+  // ── 재가입 3개월 전 ──────────────────────────────────────
+  {
+    id: "vitamin", category: "before", name: "비타민상", sub: "존재감 뿜뿜 · 아이 자랑용",
+    accent: "#F5B942",
+    body: "위 어린이는 캐츠잉글리시에서 언제나 밝은 미소와 긍정적인 에너지로 분위기를 환하게 밝혀주었습니다. 친구들과 함께 즐겁게 영어를 즐기는 모습이 온 세상에 큰 기쁨을 주기에 이 상을 수여합니다.",
+    whisper: "\"우리 친구가 접속할 때마다 화면 너머로 전해지는 환한 미소가 정말 좋더라! 네가 있으면 클래스가 훨씬 재미있어. 앞으로도 우리랑 계속 신나는 영어 모험 떠나자!\"",
+    nameSpot: { xPct: 52, yPct: 28.6, maxWidthPct: 23, color: "#ffffff" }
+  },
+  {
+    id: "wizard", category: "before", name: "영어 마법사상", sub: "자존감 치트키",
+    accent: "#8B5FE0",
+    body: "위 어린이는 낯선 영어 단어와 문장들을 반짝이는 호기심으로 멋지게 소화해 내며, 영어를 진짜 즐거운 놀이로 만드는 마법 같은 재능을 보여주었기에 이 상을 수여합니다.",
+    whisper: "\"우리 친구는 진짜 영어를 가지고 놀 줄 아는 멋진 마법사 같아! 처음엔 어렵던 문장도 네 입을 거치면 멋지게 변하잖아. 다음 레벨의 신기한 마법도 선생님이랑 같이 하나씩 풀어보자!\"",
+    nameSpot: { xPct: 52, yPct: 28.6, maxWidthPct: 23, color: "#ffffff" }
+  },
+  {
+    id: "crown", category: "before", name: "폭풍 성장 왕관상", sub: "묵묵히 쌓아온 노력 인정",
+    accent: "#4C6FDC",
+    body: "위 어린이는 하루가 다르게 눈부신 실력 향상을 보여주며, 언제나 놀라운 속도로 한계 없이 폭풍 성장해 나가는 멋진 모습을 보여주었기에 이 상을 수여합니다.",
+    whisper: "\"우리 친구가 최근 보여준 폭풍 같은 성장은 정말 놀라울 정도야! 어려운 도전도 척척 해내며 빛나는 왕관을 쓴 것처럼 멋지게 해내는 모습을 보니 선생님이 다 뿌듯하네. 지금처럼 멋진 기세로 앞으로도 우리랑 즐겁게 날아올라 보자!\"",
+    nameSpot: { xPct: 49, yPct: 35.6, maxWidthPct: 26, color: "#3a2a66" }
+  },
+  {
+    id: "shining", category: "before", name: "빛나는 영어 성장기록상", sub: "그동안의 성취 축하",
+    accent: "#29A9C7",
+    body: "위 어린이는 캐츠잉글리시와 함께하는 동안 매일 반짝이는 열정으로 멋진 영어 실력을 쑥쑥 키워왔습니다. 그동안 차곡차곡 쌓아온 눈부신 성취가 앞으로 더욱 크게 빛날 것을 믿으며, 앞으로의 즐거운 영어 모험을 기대하며 이 상을 수여합니다.",
+    whisper: "\"우리 친구가 그동안 얼마나 재미있게 영어를 잘해왔는지 선생님은 다 알지! 네가 쌓아온 멋진 실력들을 보니까 앞으로 너랑 함께할 날들이 더 기대되는 걸? 앞으로도 선생님이랑 신나게 더 높이 날아보자!\"",
+    nameSpot: { xPct: 53, yPct: 28.6, maxWidthPct: 25, color: "#ffffff" }
+  },
+  // ── 재가입 후 ────────────────────────────────────────────
+  {
+    id: "buddy", category: "after", name: "든든한 영어 짝꿍상", sub: "재가입 후 전용 · 신뢰와 여정 응원",
+    accent: "#2CA57F",
+    body: "위 어린이는 그동안 든든한 마음으로 캐츠잉글리시와 멋진 호흡을 맞추며 멋진 영어 습관을 완성해 냈습니다. 앞으로 펼쳐질 더 넓고 신나는 영어 세계를 향해 우리와 함께 힘찬 발걸음을 내딛기에 이 상을 수여합니다.",
+    whisper: "\"다시 우리랑 손잡고 신나게 달릴 준비 됐지? 그동안 묵묵히 멋지게 잘해준 덕분에 이렇게 다시 만나서 정말 기뻐. 앞으로 펼쳐질 새로운 영어 이야기들도 선생님이 제일 재미있는 짝꿍이 돼서 함께 만들어줄게!\"",
+    nameSpot: { xPct: 49, yPct: 33.7, maxWidthPct: 26, color: "#3a2a1a" }
+  },
+  // ── 해지 대비 회원 ───────────────────────────────────────
+  {
+    id: "foothold", category: "retention", name: "성장의 발판상", sub: "슬럼프·정체기 극복 지지",
+    accent: "#FF7A45",
+    body: "위 어린이는 영어 공부가 조금 지루해지거나 흔들릴 수 있는 순간에도 자신만의 페이스로 멋지게 해내었습니다. 잠시 주춤했던 이 시간을 더 높이 도약하기 위한 단단한 성장의 발판으로 삼았기에 이 상을 수여합니다.",
+    whisper: "\"요즘 조금 지치기도 했을 텐데, 그래도 끝까지 자리를 지켜준 우리 친구에게 정말 고마워. 지금 느끼는 고민은 네가 앞으로 더 잘하기 위한 아주 자연스러운 과정이야! 완벽하지 않아도 괜찮아! 지금까지 쌓은 노력 위에 이 경험을 발판 삼아 선생님이랑 여기서 더 즐겁게 다시 시작해 보자.\"",
+    nameSpot: { xPct: 49, yPct: 28.8, maxWidthPct: 25, color: "#ffffff" }
+  },
+  {
+    id: "spark", category: "retention", name: "다시 반짝 스파크상", sub: "접속 뜸한 아이 용기 부여",
+    accent: "#D9A441",
+    body: "위 어린이는 잠시 머뭇거렸던 순간을 지나, 다시금 눈부신 스파크를 튀기며 에너지를 되찾고 멋지게 반짝이기 시작했습니다. 앞으로 터져 나올 무궁무진한 가능성과 빛나는 활약을 기대하며 이 상을 수여합니다.",
+    whisper: "\"역시 너는 다시 시작하면 이렇게 반짝일 줄 알았어! 잠깐의 쉼 뒤에 터져 나온 오늘의 스파크처럼, 앞으로 네가 보여줄 멋진 모습들이 벌써부터 너무 기대돼. 지금 이 에너지를 타고 선생님이랑 더 신나게 달려보자!\"",
+    nameSpot: { xPct: 49, yPct: 28.8, maxWidthPct: 25, color: "#ffffff" }
+  },
+  {
+    id: "stepup", category: "retention", name: "쑥쑥 스텝업상", sub: "학부모 안심 유도 및 루틴 회복",
+    accent: "#4C8C5B",
+    body: "매일 조금씩 영어라는 즐거운 바다를 향해 한 걸음씩 멋지게 발걸음을 옮겨주었습니다. 힘든 순간조차 더 큰 성장을 위한 소중한 에너지로 바꿀 줄 아는 지혜로운 아이이기에 이 상을 수여합니다.",
+    whisper: "\"가끔은 숨을 고르며 쉬어가더라도 결국 다시 반짝이며 일어서는 네 긍정적인 힘을! 급하게 서두르지 않고 너만의 속도로 단단하게 실력이 자라고 있으니까, 앞으로도 우리 같이 쑥쑥 성장해 보자!\"",
+    nameSpot: { xPct: 49, yPct: 29.0, maxWidthPct: 25, color: "#2f4a33" }
+  }
+];
+
+const IMAGE_FOLDER = "templates";
+const IMAGE_EXTS = ["jpeg", "jpg", "png"];
+
+const canvas = document.getElementById("certCanvas");
+const ctx = canvas.getContext("2d");
+const renderStatus = document.getElementById("renderStatus");
+const imgStatusEl = document.getElementById("imgStatus");
+
+let currentAward = AWARD_TEMPLATES[0];
+const imageCache = {};
+
+function tryLoadImage(id){
+  if(imageCache[id] !== undefined) return Promise.resolve(imageCache[id]);
+  return new Promise((resolve) => {
+    let i = 0;
+    function attempt(){
+      if(i >= IMAGE_EXTS.length){ imageCache[id] = null; resolve(null); return; }
+      const src = `${IMAGE_FOLDER}/${id}.${IMAGE_EXTS[i]}`;
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => { imageCache[id] = img; resolve(img); };
+      img.onerror = () => { i++; attempt(); };
+      img.src = src;
+    }
+    attempt();
+  });
+}
+
+/* ---------- 이름을 빈칸 너비에 맞춰 자동으로 폰트 크기 축소 ---------- */
+function fitNameFont(ctx, text, maxWidth, baseSize){
+  let size = baseSize;
+  ctx.font = `700 ${size}px 'Gowun Dodum'`;
+  while(ctx.measureText(text).width > maxWidth && size > baseSize * 0.45){
+    size -= 1;
+    ctx.font = `700 ${size}px 'Gowun Dodum'`;
+  }
+  return size;
+}
+
+/* ---------- 메인 렌더 함수 ---------- */
+async function render(){
+  const name = document.getElementById("childName").value.trim();
+  const a = currentAward;
+
+  const img = await tryLoadImage(a.id);
+
+  const baseW = img ? img.naturalWidth  : 718;
+  const baseH = img ? img.naturalHeight : 1024;
+  const SCALE = 2; // 텍스트 선명도를 위해 2배 업스케일하여 렌더링
+  canvas.width = baseW * SCALE;
+  canvas.height = baseH * SCALE;
+  const W = canvas.width, H = canvas.height;
+
+  ctx.clearRect(0,0,W,H);
+
+  if(img){
+    ctx.drawImage(img, 0, 0, W, H);
+  } else {
+    drawFallbackBackground(ctx, W, H, a.accent, a.name);
+  }
+
+  if(name){
+    const spot = a.nameSpot;
+    const x = W * spot.xPct/100;
+    const y = H * spot.yPct/100;
+    const maxWidth = W * spot.maxWidthPct/100;
+    const baseSize = Math.round(H*0.026);
+    const size = fitNameFont(ctx, name, maxWidth, baseSize);
+    ctx.font = `700 ${size}px 'Gowun Dodum'`;
+    ctx.fillStyle = spot.color;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(name, x, y);
+  }
+
+  renderStatus.textContent = img
+    ? `템플릿: templates/${a.id}.(jpeg|png) 사용 중 · ${baseW}×${baseH}px`
+    : `templates/${a.id} 이미지를 찾지 못해 기본 파스텔 배경으로 대체했습니다.`;
+
+  document.getElementById("scriptBody").textContent = a.body;
+  document.getElementById("scriptWhisper").textContent = "🎁 선생님의 속삭임 " + a.whisper;
+}
+
+function drawFallbackBackground(ctx, W, H, accent, title){
+  const grad = ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0, "#FFF9E9");
+  grad.addColorStop(1, "#EAFBF3");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+  }
+  roundRect(W*0.04, H*0.03, W*0.92, H*0.94, W*0.05);
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = W*0.012;
+  ctx.stroke();
+  ctx.font = `700 ${Math.round(H*0.032)}px 'Jua'`;
+  ctx.fillStyle = accent;
+  ctx.textAlign = "center";
+  ctx.fillText("CATS ENGLISH", W/2, H*0.1);
+  ctx.font = `700 ${Math.round(H*0.05)}px 'Jua'`;
+  ctx.fillText(title, W/2, H*0.18);
+  ["✨","⭐","🐾","✨"].forEach((e,idx)=>{
+    ctx.font = `${Math.round(H*0.03)}px sans-serif`;
+    const pos = [[0.1,0.08],[0.9,0.08],[0.1,0.95],[0.9,0.95]][idx];
+    ctx.fillText(e, W*pos[0], H*pos[1]);
+  });
+}
+
+/* ---------- 사이드바 카드 ---------- */
+function buildAwardGrid(){
+  const groups = {
+    before: document.getElementById("group-before"),
+    after: document.getElementById("group-after"),
+    retention: document.getElementById("group-retention")
+  };
+  AWARD_TEMPLATES.forEach(a => {
+    const card = document.createElement("div");
+    card.className = "award-card";
+    card.dataset.id = a.id;
+    card.style.setProperty("--ac", a.accent);
+    card.innerHTML = `
+      <div class="swatch"></div>
+      <div class="name">${a.name}</div>
+      <div class="sub">${a.sub}</div>
+      <span class="tag" data-tagfor="${a.id}">확인 중…</span>
+    `;
+    card.addEventListener("click", () => selectAward(a.id));
+    groups[a.category].appendChild(card);
+  });
+}
+
+function selectAward(id){
+  currentAward = AWARD_TEMPLATES.find(a => a.id === id);
+  document.querySelectorAll(".award-card").forEach(el => el.classList.toggle("active", el.dataset.id === id));
+  render();
+}
+
+async function refreshTags(){
+  let anyFound = false;
+  for(const a of AWARD_TEMPLATES){
+    const img = await tryLoadImage(a.id);
+    const tagEl = document.querySelector(`.tag[data-tagfor="${a.id}"]`);
+    if(img){
+      tagEl.textContent = "이미지 연결됨";
+      tagEl.className = "tag ok";
+      anyFound = true;
+    } else {
+      tagEl.textContent = "이미지 없음(기본배경)";
+      tagEl.className = "tag na";
+    }
+  }
+  imgStatusEl.innerHTML = anyFound
+    ? `<b>templates/</b> 폴더의 이미지가 연결되었습니다. 이미지가 없는 상장은 기본 파스텔 배경으로 자동 대체됩니다.`
+    : `<b>templates/</b> 폴더를 찾을 수 없어 모든 상장이 기본 파스텔 배경으로 표시됩니다.`;
+}
+
+/* ---------- 초기화 ---------- */
+buildAwardGrid();
+document.querySelector(`.award-card[data-id="${currentAward.id}"]`).classList.add("active");
+document.getElementById("childName").addEventListener("input", render);
+
+document.fonts.load("700 20px 'Gowun Dodum'").then(()=>document.fonts.load("700 20px 'Jua'")).finally(()=>{
+  render();
+  refreshTags();
+});
+
+/* ---------- 다운로드 ---------- */
+document.getElementById("pngBtn").addEventListener("click", () => {
+  const name = document.getElementById("childName").value.trim() || "아이이름";
+  const link = document.createElement("a");
+  link.download = `${currentAward.name}_${name}.png`;
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+});
+
+document.getElementById("pdfBtn").addEventListener("click", () => {
+  const { jsPDF } = window.jspdf;
+  const w = canvas.width, h = canvas.height;
+  const orientation = w > h ? "l" : "p";
+  const pdf = new jsPDF({ orientation, unit: "px", format: [w, h] });
+  pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, w, h);
+  const name = document.getElementById("childName").value.trim() || "아이이름";
+  pdf.save(`${currentAward.name}_${name}.pdf`);
+});
+</script>
+</body>
+</html>
